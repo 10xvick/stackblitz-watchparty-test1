@@ -25,7 +25,7 @@ export default App
 function fetchData(url:string){
   const [data,setData] = useState(null);
   useEffect(()=>{
-    fetch(url+'/todo/list').then(e=>e.text()).then(e=>{
+    fetch(url+'/test').then(e=>e.text()).then(e=>{
       setData(e)
     }).catch(e=>console.error(e))
   },[]);
