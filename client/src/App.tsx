@@ -25,7 +25,6 @@ function App() {
       setid(id);
     });
     socket.on("new-message-received", (message: message) => {
-      console.log("xxx", message, messages);
       messages.push(message);
       setmessages([...messages]);
     });
