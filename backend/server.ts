@@ -2,6 +2,7 @@ import { Socket } from "socket.io";
 import { endpoints } from "../global/constants/endpoints";
 import { products } from "./products";
 import { generate } from "./utility";
+import { socketlogic } from "./socket";
 
 const express = require("express");
 const { createServer } = require("node:http");
@@ -19,16 +20,7 @@ const io = require("socket.io")(server, {
 });
 const port = endpoints.server.port;
 
-io.on("connection", (socket: Socket) => {
-  console.log("server was connected to client", socket.id);
-
-  socket.emit("connectx", socket.id + ", you have joined the server");
-  socket.broadcast.emit("connectx", "another client joined the server");
-
-  socket.on("hello", (arg) => {
-    console.log("hello-from-client", arg);
-  });
-});
+io.on("connection", (socket) => socketlogic(socket));
 
 // generate(app, products);
 
