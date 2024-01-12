@@ -40,7 +40,7 @@ function App() {
           socket.emit("hello", { message: "world" });
         }}
       >
-        test
+        say hello to socket server
       </button>
       <hr />
       user:{id} <br />
