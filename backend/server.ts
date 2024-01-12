@@ -1,4 +1,3 @@
-import { Socket } from "socket.io";
 import { endpoints } from "../global/constants/endpoints";
 import { products } from "./products";
 import { generate } from "./utility";
@@ -23,15 +22,19 @@ io.on("connection", (socket) => socketlogic(socket));
 
 // generate(app, products);
 
+app.get("", (req, res) => {
+  res.sendFile(__dirname + "/public/index.html");
+});
+
 app.get("/test", function (req, res) {
   setTimeout(function () {
     res.json({
-      data: "server is running and accepting requests from client",
+      data: "server is running",
     });
   }, 2000);
 });
 
 const port = endpoints.server.port;
 server.listen(port, function () {
-  return console.log("app is running on http://localhost:".concat(`${port}`));
+  return console.log("app is running on " + endpoints.server.url);
 });
