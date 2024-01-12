@@ -18,7 +18,6 @@ const io = require("socket.io")(server, {
     methods: ["GET", "POST"],
   },
 });
-const port = endpoints.server.port;
 
 io.on("connection", (socket) => socketlogic(socket));
 
@@ -32,6 +31,7 @@ app.get("/test", function (req, res) {
   }, 2000);
 });
 
+const port = endpoints.server.port;
 server.listen(port, function () {
   return console.log("app is running on http://localhost:".concat(`${port}`));
 });
