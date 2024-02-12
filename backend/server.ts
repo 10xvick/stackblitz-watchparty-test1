@@ -3,22 +3,20 @@ import { products } from "./products";
 import { generate } from "./utility";
 import { socketlogic } from "./socket";
 
-const express = require("express");
-const { createServer } = require("node:http");
-const bodyParser = require("body-parser");
-const cors = require("cors");
-const app = express();
-app.use(cors());
-app.use(bodyParser.json());
-const server = createServer(app);
+const app = require("express")();
+app.use(require("cors")());
+app.use(require("body-parser").json());
+
+const server = require("node:http").createServer(app);
+
 const io = require("socket.io")(server, {
   cors: {
-    origin: "*", // Replace with the origin of your React app
+    origin: "*", // client app's origin url
     methods: ["GET", "POST"],
   },
 });
 
-io.on("connection", (socket) => socketlogic(socket));
+io.on("connection", (socket) => socketlogic(socket, io));
 
 // generate(app, products);
 
