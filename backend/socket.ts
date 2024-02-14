@@ -8,11 +8,11 @@ export const socketlogic = (socket: Socket, io: Socket) => {
   socket.broadcast.emit("connectx", "another client joined the server");
 
   socket.on(socket_events.ping, (arg) => {
-    console.log("ping", arg);
+    console.log(socket_events.ping, arg);
   });
 
   socket.on(socket_events.send_to_all, (message: string) => {
-    console.log("received");
+    console.log(socket_events.received);
     const data = { user: socket.id, text: message };
     io.emit(socket_events.received, data);
   });
@@ -21,13 +21,12 @@ export const socketlogic = (socket: Socket, io: Socket) => {
     console.log(socket_events.send_to_all_except_self);
     const data = { user: socket.id, text: message };
     socket.broadcast.emit(socket_events.received, data);
-    // socket.emit(socket_events.received, data);
   });
 
   socket.on(socket_events.send_to_self, (message: string) => {
     console.log(socket_events.send_to_self);
     const data = { user: socket.id, text: message };
-    io.emit(socket_events.received, data);
+    socket.emit(socket_events.received, data);
   });
 
   socket.on(
@@ -38,4 +37,19 @@ export const socketlogic = (socket: Socket, io: Socket) => {
       socket.to(room).emit(socket_events.received, data);
     }
   );
+
+  socket.on(
+    socket_events.send_to_all_in_room,
+    (message: string, room: string | string[]) => {
+      console.log(socket_events.send_to_all_in_room);
+      const data = { user: socket.id, text: message };
+      socket.to(room).emit(socket_events.received, data);
+    }
+  );
+
+  socket.on(socket_events.join_room,(user,room,callback)=>{
+    console.log(socket_events.join_room,user,room);
+    socket.join(room);
+    callback('joined room '+ room )
+  })
 };

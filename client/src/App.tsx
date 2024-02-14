@@ -46,7 +46,7 @@ function App() {
       </button>
       <hr />
       user:{id} <br />
-      <input ref={messageinputref} />
+      <input ref={messageinputref} placeholder="message" />
       <button
         onClick={() => {
           socket.emit(socket_events.ping, messageinputref.current?.value);
@@ -77,7 +77,7 @@ function App() {
       <button
         onClick={() => {
           socket.emit(
-            socket_events.send_to_all_except_self,
+            socket_events.send_to_self,
             messageinputref.current?.value
           );
         }}
@@ -95,7 +95,32 @@ function App() {
       >
         send to one
       </button>
-      <input ref={roominputref} />
+      <button
+        onClick={() => {
+          socket.emit(
+            socket_events.join_room,
+            messageinputref.current?.value,
+            roominputref.current?.value,
+            (info:string)=>{
+              alert(info)
+            }
+          );
+        }}
+      >
+        join room
+      </button>
+      <button
+        onClick={() => {
+          socket.emit(
+            socket_events.send_to_all_in_room,
+            messageinputref.current?.value,
+            roominputref.current?.value,
+          );
+        }}
+      >
+        send to all in room
+      </button>
+      <input ref={roominputref} placeholder="room" />
       <Chat messages={messages} id={id} />
     </>
   );
