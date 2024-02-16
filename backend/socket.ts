@@ -88,4 +88,8 @@ export const socketlogic = (socket: Socket, io: Socket) => {
     console.log(userinfo, username);
     callback(true);
   });
+
+  socket.on(socket_events.get_user, (id, callback) => {
+    callback(userinfo.id2name[id]);
+  });
 };
