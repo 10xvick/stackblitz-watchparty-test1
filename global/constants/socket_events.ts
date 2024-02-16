@@ -10,6 +10,9 @@ export const socket_events = {
   send_to_one_in_room: "",
   join_room: "",
   leave_room: "",
+  create_user: "",
+  check_username_availability: "",
+  get_user: "",
 };
 
 for (let key in socket_events) {

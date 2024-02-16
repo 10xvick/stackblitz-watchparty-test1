@@ -1,10 +1,19 @@
 import { Socket } from "socket.io";
 import { socket_events } from "../global/constants/socket_events";
 
-export const socketlogic = (socket: Socket, io: Socket) => {
-  console.log("server was connected to client", socket.id);
+let userinfo = {
+  name2id: {},
+  id2name: {},
+};
 
-  socket.emit(socket_events.connected, socket.id);
+export const socketlogic = (socket: Socket, io: Socket) => {
+  console.log(
+    "server was connected to client",
+    socket.id,
+    userinfo.id2name[socket.id]
+  );
+
+  socket.emit(socket_events.connected, socket.id, userinfo.id2name[socket.id]);
   socket.broadcast.emit("connectx", "another client joined the server");
 
   socket.on(socket_events.ping, (arg) => {
@@ -13,7 +22,11 @@ export const socketlogic = (socket: Socket, io: Socket) => {
 
   socket.on(socket_events.send_to_all, (message: string) => {
     console.log(socket_events.received);
-    const data = { user: socket.id, text: message };
+    const data = {
+      user: socket.id,
+      username: userinfo.id2name[socket.id],
+      text: message,
+    };
     io.emit(socket_events.received, data);
   });
 
@@ -47,9 +60,32 @@ export const socketlogic = (socket: Socket, io: Socket) => {
     }
   );
 
-  socket.on(socket_events.join_room,(user,room,callback)=>{
-    console.log(socket_events.join_room,user,room);
+  socket.on(socket_events.join_room, (user, room, callback) => {
+    console.log(socket_events.join_room, user, room);
     socket.join(room);
-    callback('joined room '+ room )
-  })
+    callback && callback("joined room " + room);
+  });
+
+  socket.on(socket_events.leave_room, (user, room, callback) => {
+    console.log(socket_events.leave_room, user, room);
+    socket.leave(room);
+    callback && callback("left room " + room);
+  });
+
+  socket.on(socket_events.check_username_availability, (username, callback) => {
+    if (userinfo.name2id[username]) return callback(false);
+    // users.name2id[username] = socket.id;
+    callback(true);
+  });
+
+  socket.on(socket_events.create_user, (username, callback) => {
+    if (userinfo.name2id[username]) return callback(false);
+    // delete old username that is already assigned to this socket id
+    delete userinfo.name2id[userinfo.id2name[socket.id]];
+
+    userinfo.name2id[username] = socket.id;
+    userinfo.id2name[socket.id] = username;
+    console.log(userinfo, username);
+    callback(true);
+  });
 };
