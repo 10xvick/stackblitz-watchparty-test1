@@ -90,6 +90,10 @@ export const socketlogic = (socket: Socket, io: Socket) => {
   });
 
   socket.on(socket_events.get_user, (id, callback) => {
-    callback(userinfo.id2name[id]);
+    const username = userinfo.id2name[id];
+    if (!username) return;
+    delete userinfo.id2name[id];
+    userinfo.name2id[username] = socket.id;
+    callback(username);
   });
 };
