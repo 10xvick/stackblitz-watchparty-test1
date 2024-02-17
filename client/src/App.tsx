@@ -5,14 +5,12 @@ import { socket_events } from "../../global/constants/socket_events";
 
 import "./index.css";
 
-import { io } from "socket.io-client";
+import { Socket, io } from "socket.io-client";
 
-const socket = io(endpoints.server.url);
+const socket: Socket = io(endpoints.server.url);
+const last_username = localStorage.getItem("username");
+console.log(last_username, "-------------------------------");
 socket.connect();
-
-socket.on("connectx", (data) => {
-  console.log(data);
-});
 
 const initalmessages: message[] = [];
 
@@ -26,16 +24,12 @@ function App() {
   const [id, setid] = useState("");
 
   useEffect(() => {
-    const socketid = localStorage.getItem("socketid");
-    socket.on("connected", (id, name) => {
+    socket.on("connected", (id: string, name: string) => {
       setid(id);
-      if (name) setusername(name);
-      else {
-        socket.emit(socket_events.get_user, socketid, (name: string) => {
-          setusername(name);
-          localStorage.setItem("socketid", socket.id);
-        });
-      }
+      socket.emit(socket_events.get_user, last_username, (success: boolean) => {
+        alert(success.toString());
+        setusername(last_username as string);
+      });
     });
     socket.on("received", (message: message) => {
       setmessages((messages) => [...messages, message]);
@@ -148,7 +142,7 @@ function App() {
       >
         send to room
       </button>
-      <CreateUser value={[username, setusername, socket]} />
+      <CreateUser value={[setusername, socket]} />
       <hr />
       <Chat messages={messages} id={id} />
       <hr />
@@ -184,7 +178,7 @@ function Chat({ messages, id }: { messages: message[]; id: String }) {
   );
 }
 
-function CreateUser({ value: [username, setusername, socket] }: any) {
+function CreateUser({ value: [setusername, socket] }: any) {
   const username_ref = createRef<HTMLInputElement>();
 
   function check_user_availability() {
@@ -199,23 +193,21 @@ function CreateUser({ value: [username, setusername, socket] }: any) {
   }
 
   function create_user() {
-    socket.emit(
-      socket_events.create_user,
-      username_ref.current?.value,
-      (e: boolean) =>
-        alert(
-          e ? "created successfully" : "duplicate user, try different username"
-        )
-    );
+    const username = username_ref.current?.value;
+    socket.emit(socket_events.create_user, username, (e: boolean) => {
+      if (e) {
+        localStorage.setItem("username", username as string);
+        console.log(username as string);
+      }
+      alert(
+        e ? "created successfully" : "duplicate user, try different username"
+      );
+    });
     setusername(username_ref.current?.value);
     // check_user_availability();
   }
 
   const [username_available, setusername_available] = useState("");
-
-  useEffect(() => {
-    console.log(username, setusername, socket);
-  });
 
   return (
     <>

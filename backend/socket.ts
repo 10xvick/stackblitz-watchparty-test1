@@ -6,15 +6,24 @@ let userinfo = {
   id2name: {},
 };
 
-export const socketlogic = (socket: Socket, io: Socket) => {
+export const socketlogic = (socket: Socket | any, io: Socket) => {
   console.log(
     "server was connected to client",
     socket.id,
-    userinfo.id2name[socket.id]
+    userinfo.id2name[socket.id],
+    socket.username
   );
 
   socket.emit(socket_events.connected, socket.id, userinfo.id2name[socket.id]);
   socket.broadcast.emit("connectx", "another client joined the server");
+
+  socket.on(socket_events.get_user, (username, callback) => {
+    // delete userinfo.id2name[username];
+    userinfo.id2name[socket.id] = username;
+    userinfo.name2id[username] = socket.id;
+    console.log(socket.id, username);
+    callback(true);
+  });
 
   socket.on(socket_events.ping, (arg) => {
     console.log(socket_events.ping, arg);
@@ -94,6 +103,8 @@ export const socketlogic = (socket: Socket, io: Socket) => {
     if (!username) return;
     delete userinfo.id2name[id];
     userinfo.name2id[username] = socket.id;
+    userinfo.id2name[socket.id] = username;
+    console.log(userinfo, id);
     callback(username);
   });
 };
