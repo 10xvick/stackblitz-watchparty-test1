@@ -189,14 +189,13 @@ function CreateUser({ value: [setusername, socket] }: any) {
     socket.emit(socket_events.create_user, username, (e: boolean) => {
       if (e) {
         localStorage.setItem("last_id", socket.id);
-        console.log(username as string);
       }
       alert(
         e ? "created successfully" : "duplicate user, try different username"
       );
     });
     setusername(username_ref.current?.value);
-    // check_user_availability();
+    check_user_availability();
   }
 
   const [username_available, setusername_available] = useState("");
