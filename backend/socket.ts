@@ -7,22 +7,18 @@ let userinfo = {
 };
 
 export const socketlogic = (socket: Socket | any, io: Socket) => {
-  console.log(
-    "server was connected to client",
-    socket.id,
-    userinfo.id2name[socket.id],
-    socket.username
-  );
+  console.log("server was connected to client", socket.id);
 
-  socket.emit(socket_events.connected, socket.id, userinfo.id2name[socket.id]);
+  socket.emit(socket_events.connected, socket.id);
   socket.broadcast.emit("connectx", "another client joined the server");
 
-  socket.on(socket_events.get_user, (username, callback) => {
-    // delete userinfo.id2name[username];
+  socket.on(socket_events.get_user, (last_id, callback) => {
+    const username = userinfo.id2name[last_id];
+    delete userinfo.id2name[last_id];
     userinfo.id2name[socket.id] = username;
     userinfo.name2id[username] = socket.id;
-    console.log(socket.id, username);
-    callback(true);
+    console.log(socket.id, last_id, username);
+    callback(username);
   });
 
   socket.on(socket_events.ping, (arg) => {

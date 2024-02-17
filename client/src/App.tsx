@@ -8,8 +8,7 @@ import "./index.css";
 import { Socket, io } from "socket.io-client";
 
 const socket: Socket = io(endpoints.server.url);
-const last_username = localStorage.getItem("username");
-console.log(last_username, "-------------------------------");
+const last_id = localStorage.getItem("last_id");
 socket.connect();
 
 const initalmessages: message[] = [];
@@ -24,11 +23,11 @@ function App() {
   const [id, setid] = useState("");
 
   useEffect(() => {
-    socket.on("connected", (id: string, name: string) => {
+    socket.on("connected", (id: string) => {
       setid(id);
-      socket.emit(socket_events.get_user, last_username, (success: boolean) => {
-        alert(success.toString());
-        setusername(last_username as string);
+      socket.emit(socket_events.get_user, last_id, (username: string) => {
+        setusername(username);
+        localStorage.setItem("last_id", socket.id);
       });
     });
     socket.on("received", (message: message) => {
@@ -40,14 +39,7 @@ function App() {
   return (
     <>
       data:{data}
-      <button
-        onClick={(e) => {
-          socket.emit("hello", { message: "world" });
-        }}
-      >
-        say hello to socket server
-      </button>
-      <hr />
+      <br />
       user:{id} | {username}
       <br />
       <input ref={messageinputref} placeholder="message" />
@@ -196,7 +188,7 @@ function CreateUser({ value: [setusername, socket] }: any) {
     const username = username_ref.current?.value;
     socket.emit(socket_events.create_user, username, (e: boolean) => {
       if (e) {
-        localStorage.setItem("username", username as string);
+        localStorage.setItem("last_id", socket.id);
         console.log(username as string);
       }
       alert(
