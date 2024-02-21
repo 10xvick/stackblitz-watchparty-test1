@@ -13,6 +13,7 @@ export const socket_events = {
   create_user: "",
   check_username_availability: "",
   get_user: "",
+  get_users: "",
 };
 
 for (let key in socket_events) {

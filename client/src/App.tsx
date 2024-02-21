@@ -14,6 +14,7 @@ socket.connect();
 const initalmessages: message[] = [];
 
 const api = endpoints.server;
+
 function App() {
   const data = fetchData(api.url);
   const [username, setusername] = useState("");
@@ -49,6 +50,13 @@ function App() {
         }}
       >
         ping
+      </button>
+      <button
+        onClick={() => {
+          socket.emit(socket_events.get_users, console.log);
+        }}
+      >
+        get users
       </button>
       <button
         onClick={() => {
@@ -134,7 +142,7 @@ function App() {
       >
         send to room
       </button>
-      <CreateUser value={[setusername, socket]} />
+      <CreateUser value={[username, setusername, socket]} />
       <hr />
       <Chat messages={messages} id={id} />
       <hr />
@@ -163,14 +171,15 @@ function Chat({ messages, id }: { messages: message[]; id: String }) {
     <div>
       {messages.map((e: message, i) => (
         <div key={i} style={{ color: id == e.user ? "blue" : "black" }}>
-          {e.text}------------<small>{e.user}</small>
+          {e.text}------------<small>{e.username || e.user}</small>
         </div>
       ))}
     </div>
   );
 }
 
-function CreateUser({ value: [setusername, socket] }: any) {
+function CreateUser({ value: [username, setusername, socket] }: any) {
+  const [username_available, setusername_available] = useState("");
   const username_ref = createRef<HTMLInputElement>();
 
   function check_user_availability() {
@@ -198,8 +207,6 @@ function CreateUser({ value: [setusername, socket] }: any) {
     check_user_availability();
   }
 
-  const [username_available, setusername_available] = useState("");
-
   return (
     <>
       <hr />
@@ -208,10 +215,12 @@ function CreateUser({ value: [setusername, socket] }: any) {
         <input
           ref={username_ref}
           style={{ background: username_available ? "" : "#ffaaaa" }}
-          placeholder="username"
+          placeholder={username || "username"}
           onChange={check_user_availability}
         />
-        {username_available && <button onClick={create_user}>create</button>}
+        <button disabled={!Boolean(username_available)} onClick={create_user}>
+          {username ? "rename" : "create"}
+        </button>
       </div>
     </>
   );
