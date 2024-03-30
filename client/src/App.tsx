@@ -2,6 +2,7 @@ import { createRef, useEffect, useState } from "react";
 import { endpoints } from "../../global/constants/endpoints";
 import { message } from "../../types/chat";
 import { socket_events } from "../../global/constants/socket_events";
+import { PeerApp } from "./webrtc/peer";
 
 import "./index.css";
 
@@ -22,6 +23,7 @@ function App() {
   const roominputref = createRef<HTMLInputElement>();
   const [messages, setmessages] = useState(initalmessages);
   const [id, setid] = useState("");
+  const [users, setusers] = useState([]);
 
   useEffect(() => {
     socket.on("connected", (id: string) => {
@@ -30,6 +32,7 @@ function App() {
         setusername(username);
         localStorage.setItem("last_id", socket.id);
       });
+      socket.emit(socket_events.get_users, setusers);
     });
     socket.on("received", (message: message) => {
       setmessages((messages) => [...messages, message]);
@@ -146,6 +149,7 @@ function App() {
       <hr />
       <Chat messages={messages} id={id} />
       <hr />
+      <PeerApp id={id} users={users} />
     </>
   );
 }
@@ -225,14 +229,3 @@ function CreateUser({ value: [username, setusername, socket] }: any) {
     </>
   );
 }
-
-fetch(
-  "https://stackblitzwatchpartytest1-uygi--5174--f7aa08df.local-credentialless.webcontainer.io"
-)
-  .then((e) => e.json())
-  .then((e) => {
-    console.log("-----------------------------------------------", e);
-  })
-  .catch((e) => {
-    console.log("error------------------------------------------", e);
-  });
