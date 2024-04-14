@@ -37,6 +37,10 @@ function App() {
     socket.on("received", (message: message) => {
       setmessages((messages) => [...messages, message]);
     });
+
+    socket.on(socket_events.new_user_joined, (data) => {
+      console.log(1111, data);
+    });
   }, []);
 
   if (!id) return <>connecting...</>;

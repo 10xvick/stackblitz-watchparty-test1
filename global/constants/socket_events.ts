@@ -14,6 +14,8 @@ export const socket_events = {
   check_username_availability: "",
   get_user: "",
   get_users: "",
+  new_user_joined: "",
+  new_user_renamed: "",
 };
 
 for (let key in socket_events) {
