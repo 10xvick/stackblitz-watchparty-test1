@@ -3,13 +3,11 @@ import { endpoints } from "../../global/constants/endpoints";
 import { message } from "../../types/chat";
 import { socket_events } from "../../global/constants/socket_events";
 import { PeerApp } from "./webrtc/peer";
-
 import "./index.css";
-
 import { Socket, io } from "socket.io-client";
+import Peer, { DataConnection } from "peerjs";
 
 const socket: Socket = io(endpoints.server.url);
-const last_id = localStorage.getItem("last_id");
 socket.connect();
 
 const initalmessages: message[] = [];
@@ -22,34 +20,78 @@ function App() {
   const messageinputref = createRef<HTMLInputElement>();
   const roominputref = createRef<HTMLInputElement>();
   const [messages, setmessages] = useState(initalmessages);
-  const [id, setid] = useState("");
-  const [users, setusers] = useState([]);
+  const [socketid, setsocketid] = useState("");
+  const [peer, setpeer] = useState<Peer | any>();
+  const [users, setusers] = useState<Array<string>>([]);
+
+  function updateusers() {
+    socket.emit(socket_events.get_users, (users: Array<string>) => {
+      setusers(users.filter((id) => id != socket.id));
+      setsocketid(socket.id);
+      setpeer(new Peer(socketid));
+    });
+  }
 
   useEffect(() => {
-    socket.on("connected", (id: string) => {
-      setid(id);
-      socket.emit(socket_events.get_user, last_id, (username: string) => {
-        setusername(username);
-        localStorage.setItem("last_id", socket.id);
-      });
-      socket.emit(socket_events.get_users, setusers);
+    socket.on(socket_events.connect, () => {
+      //get existing users
+      updateusers();
     });
+
+    socket.on(socket_events.new_user_joined, () => {
+      console.log("new user joined");
+      //update users
+      updateusers();
+    });
+
+    socket.on(socket_events.new_user_disconnected, () => {
+      //update users
+      updateusers();
+    });
+
     socket.on("received", (message: message) => {
       setmessages((messages) => [...messages, message]);
     });
 
-    socket.on(socket_events.new_user_joined, (data) => {
-      console.log(1111, data);
-    });
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
-  if (!id) return <>connecting...</>;
+  if (!socketid) return <>connecting...</>;
   return (
     <>
       data:{data}
       <br />
-      user:{id} | {username}
+      user:{socketid} | {username}
       <br />
+      <hr />
+      {users.map((e) => (
+        <button
+          onClick={() => {
+            const conn = peer.connect(e);
+            console.log(conn);
+            conn.on("open", () => {
+              conn.send("hi!");
+            });
+
+            peer.on("connection", (conn: DataConnection) => {
+              conn.on("data", (data) => {
+                // Will print 'hi!'
+                console.log(data);
+              });
+              conn.on("open", () => {
+                conn.send("hello!");
+              });
+            });
+
+            console.log("x");
+          }}
+        >
+          {e}
+        </button>
+      ))}
+      <hr />
       <input ref={messageinputref} placeholder="message" />
       <button
         onClick={() => {
@@ -124,7 +166,7 @@ function App() {
       <button
         onClick={() => {
           socket.emit(
-            socket_events.join_room,
+            socket_events.leave_room,
             messageinputref.current?.value,
             roominputref.current?.value,
             (info: string) => {
@@ -151,9 +193,9 @@ function App() {
       </button>
       <CreateUser value={[username, setusername, socket]} />
       <hr />
-      <Chat messages={messages} id={id} />
+      <Chat messages={messages} id={socketid} />
       <hr />
-      <PeerApp id={id} users={users} />
+      <PeerApp id={socketid} users={users} />
     </>
   );
 }

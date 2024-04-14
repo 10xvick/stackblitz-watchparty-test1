@@ -1,6 +1,6 @@
 export const socket_events = {
   ping: "",
-  connected: "",
+  connect: "",
   received: "",
   send_to_all: "",
   send_to_all_except_self: "",
@@ -15,7 +15,9 @@ export const socket_events = {
   get_user: "",
   get_users: "",
   new_user_joined: "",
+  new_user_disconnected: "",
   new_user_renamed: "",
+  disconnect: "",
 };
 
 for (let key in socket_events) {
