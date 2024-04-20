@@ -17,6 +17,7 @@ export const socket_events = {
   new_user_joined: "",
   new_user_disconnected: "",
   new_user_renamed: "",
+  update_user_info: "",
   disconnect: "",
 };
 

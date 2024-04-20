@@ -5,7 +5,7 @@ export function PeerApp({ id, users }: any) {
   useEffect(() => {
     const peer = new Peer(id);
 
-    console.log("xyz", Object.values(users));
+    // console.log("xyz", Object.values(users));
   }, []);
   return (
     <>

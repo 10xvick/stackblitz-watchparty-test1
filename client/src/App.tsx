@@ -9,6 +9,7 @@ import Peer, { DataConnection } from "peerjs";
 
 const socket: Socket = io(endpoints.server.url);
 socket.connect();
+const peer = new Peer();
 
 const initalmessages: message[] = [];
 
@@ -21,16 +22,41 @@ function App() {
   const roominputref = createRef<HTMLInputElement>();
   const [messages, setmessages] = useState(initalmessages);
   const [socketid, setsocketid] = useState("");
-  const [peer, setpeer] = useState<Peer | any>();
   const [users, setusers] = useState<Array<string>>([]);
+  const [videos, setvideos] = useState<any>([]);
 
   function updateusers() {
-    socket.emit(socket_events.get_users, (users: Array<string>) => {
-      setusers(users.filter((id) => id != socket.id));
+    socket.emit(socket_events.get_users, (userinfo: any) => {
+      const users = userinfo.id;
+      setusers(users.filter((id: string) => id != socket.id));
       setsocketid(socket.id);
-      setpeer(new Peer(socketid));
     });
   }
+
+  useEffect(() => {
+    peer.on("open", (id: string) => {
+      console.log("my peer id is " + id);
+      socket.emit(socket_events.update_user_info, { peer: id });
+    });
+    peer.on("connection", (conn: DataConnection) => {
+      conn.on("data", (data) => {
+        // Will print 'hi!'
+        console.log(data);
+      });
+    });
+    peer.on("call", (call) => {
+      navigator.mediaDevices
+        .getUserMedia({ video: true, audio: true })
+        .then((stream) => {
+          console.log(stream);
+          call.answer(stream);
+        })
+        .catch((error) => {
+          console.warn("stream error", error);
+          call.answer();
+        });
+    });
+  }, [peer]);
 
   useEffect(() => {
     socket.on(socket_events.connect, () => {
@@ -66,31 +92,47 @@ function App() {
       user:{socketid} | {username}
       <br />
       <hr />
-      {users.map((e) => (
+      {users.map((e: string) => (
         <button
           onClick={() => {
-            const conn = peer.connect(e);
-            console.log(conn);
-            conn.on("open", () => {
-              conn.send("hi!");
-            });
+            const video = (
+              <video
+                key={Math.random()}
+                autoPlay
+                src="https://videos.pexels.com/video-files/852421/852421-sd_640_360_30fps.mp4"
+              />
+            );
+            setvideos((videos: any) => [...videos, video]);
+            console.log(video);
 
-            peer.on("connection", (conn: DataConnection) => {
-              conn.on("data", (data) => {
-                // Will print 'hi!'
-                console.log(data);
-              });
+            socket.emit(socket_events.get_users, (userinfo: any) => {
+              const peerid = userinfo.info[e]?.peer;
+              console.log(peerid);
+              const conn = peer.connect(peerid);
               conn.on("open", () => {
-                conn.send("hello!");
+                conn.send("peer says hi!");
+                console.log("connection stablished", peerid);
+
+                navigator.mediaDevices
+                  .getUserMedia({ video: true, audio: true })
+                  .then((stream) => {
+                    const call = peer.call(peerid, stream);
+                    call.on("stream", (remoteStream) => {
+                      console.log("streaming", remoteStream);
+                    });
+                  })
+                  .catch((error) => {
+                    console.warn("stream error c : ", error);
+                  });
               });
             });
-
-            console.log("x");
           }}
         >
           {e}
         </button>
       ))}
+      <hr />
+      videos: {...videos}
       <hr />
       <input ref={messageinputref} placeholder="message" />
       <button

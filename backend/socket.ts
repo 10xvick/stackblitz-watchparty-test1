@@ -6,6 +6,7 @@ let userinfo = {
   name2id: {},
   id2name: {},
   id: [],
+  info: {},
 };
 
 export const socketlogic = (socket: Socket | any, io: Socket) => {
@@ -13,14 +14,21 @@ export const socketlogic = (socket: Socket | any, io: Socket) => {
   userinfo.id.push(socket.id);
   io.emit(socket_events.new_user_joined);
 
+  socket.on(socket_events.update_user_info, ({ peer }) => {
+    userinfo.info[socket.id] ||= {};
+    userinfo.info[socket.id].peer = peer;
+    console.log("info", userinfo.info);
+  });
+
   socket.on(socket_events.disconnect, () => {
     userinfo.id = userinfo.id.filter((id) => id != socket.id);
+    delete userinfo.info[socket.id];
     io.emit(socket_events.new_user_disconnected);
   });
 
   socket.on(socket_events.get_users, (callback) => {
     console.log(userinfo.id);
-    callback(userinfo.id);
+    callback(userinfo);
   });
 
   socket.on(socket_events.ping, (arg) => {
