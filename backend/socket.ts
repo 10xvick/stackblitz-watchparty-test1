@@ -27,7 +27,7 @@ export const socketlogic = (socket: Socket | any, io: Socket) => {
   });
 
   socket.on(socket_events.get_users, (callback) => {
-    console.log(userinfo.id);
+    console.log(socket_events.get_users, userinfo.id);
     callback(userinfo);
   });
 

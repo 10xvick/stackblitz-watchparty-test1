@@ -114,7 +114,7 @@ function App() {
                 console.log("connection stablished", peerid);
 
                 navigator.mediaDevices
-                  .getUserMedia({ video: true, audio: true })
+                  .getUserMedia({ video: true, audio: false })
                   .then((stream) => {
                     const call = peer.call(peerid, stream);
                     call.on("stream", (remoteStream) => {
