@@ -1,4 +1,4 @@
-import { createRef, useEffect, useState } from "react";
+import { createRef, useEffect, useRef, useState } from "react";
 import { endpoints } from "../../global/constants/endpoints";
 import { message } from "../../types/chat";
 import { socket_events } from "../../global/constants/socket_events";
@@ -23,7 +23,8 @@ function App() {
   const [messages, setmessages] = useState(initalmessages);
   const [socketid, setsocketid] = useState("");
   const [users, setusers] = useState<Array<string>>([]);
-  const [videos, setvideos] = useState<any>([]);
+  const [mediastreams, setmediastreams] = useState<any>([]);
+  const [mymediastream, setmymediastream] = useState<any>();
 
   function updateusers() {
     socket.emit(socket_events.get_users, (userinfo: any) => {
@@ -32,6 +33,15 @@ function App() {
       setsocketid(socket.id);
     });
   }
+
+  useEffect(() => {
+    navigator.mediaDevices
+      .getUserMedia({ video: true, audio: false })
+      .then((stream) => {
+        setmymediastream(stream);
+      })
+      .catch((e) => console.log("self stream error", e));
+  });
 
   useEffect(() => {
     peer.on("open", (id: string) => {
@@ -95,16 +105,6 @@ function App() {
       {users.map((e: string) => (
         <button
           onClick={() => {
-            const video = (
-              <video
-                key={Math.random()}
-                autoPlay
-                src="https://videos.pexels.com/video-files/852421/852421-sd_640_360_30fps.mp4"
-              />
-            );
-            setvideos((videos: any) => [...videos, video]);
-            console.log(video);
-
             socket.emit(socket_events.get_users, (userinfo: any) => {
               const peerid = userinfo.info[e]?.peer;
               console.log(peerid);
@@ -119,6 +119,7 @@ function App() {
                     const call = peer.call(peerid, stream);
                     call.on("stream", (remoteStream) => {
                       console.log("streaming", remoteStream);
+                      setmediastreams((e: any) => [...e, remoteStream]);
                     });
                   })
                   .catch((error) => {
@@ -132,7 +133,13 @@ function App() {
         </button>
       ))}
       <hr />
-      videos: {...videos}
+      my video:
+      <Video mediastream={mymediastream} />
+      <hr />
+      videos:
+      {mediastreams.map((mediastream: MediaStream) => {
+        <Video mediastream={mediastream} />;
+      })}
       <hr />
       <input ref={messageinputref} placeholder="message" />
       <button
@@ -315,5 +322,27 @@ function CreateUser({ value: [username, setusername, socket] }: any) {
         </button>
       </div>
     </>
+  );
+}
+
+function Video({ mediastream }: any) {
+  const videoref = useRef<any>();
+  useEffect(() => {
+    videoref.current.srcObject = mediastream;
+    console.log("s up");
+    return () => {
+      const tracks = videoref?.current?.srcObject?.getTracks();
+      if (!tracks) return;
+      tracks.forEach((track: MediaStreamTrack) => track.stop());
+      console.log("cleanup");
+    };
+  }, []);
+  return (
+    <video
+      ref={videoref}
+      autoPlay
+      width="200px"
+      style={{ transform: "scaleX(-1)" }}
+    />
   );
 }
